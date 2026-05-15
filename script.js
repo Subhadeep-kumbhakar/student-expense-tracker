@@ -1,72 +1,217 @@
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+// ===== DATA STORE =====
+let expenses = [];
 
-    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-    const warning = document.getElementById("budgetWarning");
-
-    if (budget > 0 && total > budget) {
-
-        warning.innerText = "⚠ Budget exceeded!";
+// ===== LOAD from localStorage on startup =====
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('student_expenses');
+    if (saved) {
+        try {
+            expenses = JSON.parse(saved);
+        } catch (e) {
+            expenses = [];
+        }
     }
+    renderTable();
+    renderBreakdown();
+    updateSummary();
+});
 
-    else {
-
-        warning.innerText = "";
-    }
+// ===== SAVE to localStorage =====
+function saveData() {
+    localStorage.setItem('student_expenses', JSON.stringify(expenses));
 }
 
-function renderExpenses() {
+// ===== ADD EXPENSE =====
+function addExpense() {
+    const amountInput   = document.getElementById('amount');
+    const categoryInput = document.getElementById('category');
+    const noteInput     = document.getElementById('note');
 
-    const expenseList = document.getElementById("expenseList");
+    const amount   = parseFloat(amountInput.value);
+    const category = categoryInput.value.trim();
+    const note     = noteInput.value.trim();
 
-    const totalElement = document.getElementById("total");
+    if (!amount || amount <= 0) {
+        alert('Please enter a valid amount greater than 0.');
+        amountInput.focus();
+        return;
+    }
 
-    const search = document.getElementById("search").value.toLowerCase();
+    if (!category) {
+        alert('Please select a category.');
+        categoryInput.focus();
+        return;
+    }
 
-    expenseList.innerHTML = "";
+    const expense = {
+        id: Date.now(),
+        amount: amount,
+        category: category,
+        note: note || '—'
+    };
 
-    let total = 0;
+    expenses.push(expense);
+    saveData();
+    renderTable();
+    renderBreakdown();
+    updateSummary();
 
-    expenses.forEach((expense, index) => {
+    // Reset form
+    amountInput.value   = '';
+    categoryInput.value = '';
+    noteInput.value     = '';
+    amountInput.focus();
+}
 
-        if (
-            expense.category.toLowerCase().includes(search) ||
-            expense.note.toLowerCase().includes(search)
-        ) {
-
-            total += expense.amount;
-
-            const card = document.createElement("div");
-
-            card.className = "expense-card";
-
-            card.innerHTML = `
-                <div class="expense-info">
-                    <h3>₹${expense.amount}</h3>
-                    <p>Category: ${expense.category}</p>
-                    <p>Note: ${expense.note}</p>
-                </div>
-
-                <div class="action-buttons">
-
-                    <button class="edit-btn" onclick="editExpense(${index})">
-                        Edit
-                    </button>
-
-                    <button class="delete-btn" onclick="deleteExpense(${index})">
-                        Delete
-                    </button>
-
-                </div>
-            `;
-
-            expenseList.appendChild(card);
+// Allow Enter key to add expense from any form field
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (['amount', 'category', 'note'].includes(active.id)) {
+            addExpense();
         }
+    }
+});
+
+// ===== DELETE EXPENSE =====
+function deleteExpense(id) {
+    if (!confirm('Delete this expense?')) return;
+    expenses = expenses.filter(e => e.id !== id);
+    saveData();
+    renderTable();
+    renderBreakdown();
+    updateSummary();
+}
+
+// ===== CLEAR ALL =====
+function clearAll() {
+    if (expenses.length === 0) {
+        alert('No expenses to clear.');
+        return;
+    }
+    if (!confirm('Are you sure you want to delete ALL expenses?')) return;
+    expenses = [];
+    saveData();
+    renderTable();
+    renderBreakdown();
+    updateSummary();
+}
+
+// ===== FILTER EXPENSES =====
+function getFiltered() {
+    const search   = document.getElementById('searchInput').value.toLowerCase();
+    const filterCat = document.getElementById('filterCategory').value;
+
+    return expenses.filter(e => {
+        const matchSearch = !search ||
+            e.category.toLowerCase().includes(search) ||
+            e.note.toLowerCase().includes(search);
+        const matchCat = !filterCat || e.category === filterCat;
+        return matchSearch && matchCat;
+    });
+}
+
+// ===== RENDER TABLE =====
+function renderTable() {
+    const tbody    = document.getElementById('expenseBody');
+    const filtered = getFiltered();
+
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">No expenses found.</td></tr>`;
+        return;
+    }
+
+    filtered.forEach((e, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td><span class="badge badge-${e.category}">${e.category}</span></td>
+            <td>₹${e.amount.toFixed(2)}</td>
+            <td>${e.note}</td>
+            <td><button class="delete-btn" onclick="deleteExpense(${e.id})">🗑 Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ===== UPDATE SUMMARY CARDS =====
+function updateSummary() {
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    document.getElementById('totalAmount').textContent  = `₹${total.toFixed(2)}`;
+    document.getElementById('expenseCount').textContent = expenses.length;
+
+    // Top category
+    if (expenses.length === 0) {
+        document.getElementById('topCategory').textContent = '—';
+        return;
+    }
+
+    const catTotals = {};
+    expenses.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
     });
 
-    totalElement.innerText = total;
-
-    checkBudget();
+    const top = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById('topCategory').textContent = top ? top[0] : '—';
 }
 
-renderExpenses();
+// ===== RENDER CATEGORY BREAKDOWN =====
+function renderBreakdown() {
+    const container = document.getElementById('breakdown');
+
+    if (expenses.length === 0) {
+        container.innerHTML = `<p class="breakdown-empty">Add expenses to see category breakdown.</p>`;
+        return;
+    }
+
+    // Group by category
+    const catTotals = {};
+    expenses.forEach(e => {
+        catTotals[e.category] = (catTotals[e.category] || 0) + e.amount;
+    });
+
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+    container.innerHTML = sorted.map(([cat, amt]) => {
+        const pct = total > 0 ? (amt / total) * 100 : 0;
+        return `
+            <div class="breakdown-row">
+                <span class="breakdown-label">${cat}</span>
+                <div class="breakdown-bar-wrap">
+                    <div class="breakdown-bar" style="width: ${pct.toFixed(1)}%"></div>
+                </div>
+                <span class="breakdown-amount">₹${amt.toFixed(2)}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// ===== EXPORT CSV =====
+function exportCSV() {
+    if (expenses.length === 0) {
+        alert('No expenses to export.');
+        return;
+    }
+
+    const header = ['#', 'Category', 'Amount (INR)', 'Note'];
+    const rows = expenses.map((e, i) =>
+        [i + 1, e.category, e.amount.toFixed(2), `"${e.note.replace(/"/g, '""')}"`]
+    );
+
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    rows.push(['', 'TOTAL', total.toFixed(2), '']);
+
+    const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'expenses.csv';
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
