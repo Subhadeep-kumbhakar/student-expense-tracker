@@ -1,13 +1,9 @@
-```cpp
+
 #include <iostream>
-#include <windows.h>
+
 #include "ExpenseManager.h"
 
 using namespace std;
-
-void setColor(int color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
-}
 
 int main() {
 
@@ -19,13 +15,7 @@ int main() {
 
     while (true) {
 
-        setColor(11);
-
-        cout << "\n====================================\n";
-        cout << "     STUDENT EXPENSE TRACKER\n";
-        cout << "====================================\n";
-
-        setColor(14);
+        cout << "\n===== Student Expense Tracker =====\n";
 
         cout << "1. Add Expense\n";
         cout << "2. View Expenses\n";
@@ -33,112 +23,72 @@ int main() {
         cout << "4. Delete Expense\n";
         cout << "5. Exit\n";
 
-        setColor(7);
-
-        cout << "Choose option: ";
-
+        cout << "\nEnter choice: ";
         cin >> choice;
 
-        cin.ignore();
+        if (choice == 1) {
 
-        switch (choice) {
+            double amount;
+            string category;
+            string note;
 
-            case 1: {
+            cout << "\nEnter amount: ";
+            cin >> amount;
 
-                double amount;
-                string category;
-                string note;
+            cin.ignore();
 
-                setColor(11);
+            cout << "Enter category: ";
+            getline(cin, category);
 
-                cout << "Enter amount: ";
-                cin >> amount;
+            cout << "Enter note: ";
+            getline(cin, note);
 
-                cin.ignore();
+            Expense expense(amount, category, note);
 
-                cout << "Enter category: ";
-                getline(cin, category);
+            manager.addExpense(expense);
 
-                cout << "Enter note: ";
-                getline(cin, note);
+            manager.saveToFile();
 
-                Expense expense(amount, category, note);
+            cout << "\nExpense added successfully.\n";
+        }
 
-                manager.addExpense(expense);
+        else if (choice == 2) {
 
-                manager.saveToFile();
+            manager.viewExpenses();
+        }
 
-                setColor(10);
+        else if (choice == 3) {
 
-                cout << "Expense added successfully!\n";
+            cout << "\nTotal Expense: "
+                 << manager.getTotalExpense()
+                 << endl;
+        }
 
-                setColor(7);
+        else if (choice == 4) {
 
-                break;
-            }
+            int number;
 
-            case 2:
+            cout << "\nEnter expense number to delete: ";
+            cin >> number;
 
-                setColor(11);
+            manager.deleteExpense(number - 1);
 
-                manager.viewExpenses();
+            manager.saveToFile();
+        }
 
-                setColor(7);
+        else if (choice == 5) {
 
-                break;
+            cout << "\nExiting program...\n";
 
-            case 3:
+            break;
+        }
 
-                setColor(10);
+        else {
 
-                cout << "Total Expense = ₹"
-                     << manager.getTotalExpense()
-                     << endl;
-
-                setColor(7);
-
-                break;
-
-            case 4: {
-
-                int expenseNumber;
-
-                manager.viewExpenses();
-
-                setColor(14);
-
-                cout << "Enter expense number to delete: ";
-                cin >> expenseNumber;
-
-                manager.deleteExpense(expenseNumber - 1);
-
-                manager.saveToFile();
-
-                setColor(7);
-
-                break;
-            }
-
-            case 5:
-
-                setColor(10);
-
-                cout << "Exiting...\n";
-
-                setColor(7);
-
-                return 0;
-
-            default:
-
-                setColor(12);
-
-                cout << "Invalid choice!\n";
-
-                setColor(7);
+            cout << "\nInvalid choice.\n";
         }
     }
 
     return 0;
 }
-```
+

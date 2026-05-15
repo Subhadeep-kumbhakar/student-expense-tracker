@@ -1,10 +1,12 @@
+
 #ifndef EXPENSE_H
 #define EXPENSE_H
 
-#include <string>
+#include <iostream>
 using namespace std;
 
 class Expense {
+
 private:
     double amount;
     string category;
@@ -14,10 +16,11 @@ public:
     Expense(double amt, string cat, string nt);
 
     double getAmount();
-    string getCategory();
-    string getNote();
 
-    void display();
+    string getCategory();
+
+    string getNote();
 };
 
 #endif
+
