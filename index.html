@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Expense Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>💸 Student Expense Tracker</h1>
+
+        <div class="top-controls">
+
+            <input type="text" id="search" placeholder="Search expenses..." onkeyup="renderExpenses()">
+
+            <input type="number" id="budget" placeholder="Monthly Budget" oninput="checkBudget()">
+
+        </div>
+
+        <div class="form-section">
+
+            <input type="number" id="amount" placeholder="Enter amount">
+
+            <input type="text" id="category" placeholder="Enter category">
+
+            <input type="text" id="note" placeholder="Enter note">
+
+            <button onclick="addExpense()">Add Expense</button>
+
+        </div>
+
+        <div class="summary">
+
+            <h2>Total Expense: ₹<span id="total">0</span></h2>
+
+            <h3 id="budgetWarning"></h3>
+
+        </div>
+
+        <div class="expense-list" id="expenseList">
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
