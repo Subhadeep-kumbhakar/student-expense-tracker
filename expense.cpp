@@ -1,9 +1,9 @@
 
 #include "Expense.h"
 
-Expense::Expense(double amt, string cat, string nt) {
+Expense::Expense(double a, string cat, string nt) {
 
-    amount = amt;
+    amount = a;
     category = cat;
     note = nt;
 }
